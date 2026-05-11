@@ -9,6 +9,9 @@
  * @link        https://www.zentao.net
  */
 
+/* Load dingtalklogin language pack. */
+$this->app->loadLang('dingtalklogin');
+
 /* Check if dinguser webhook is configured. */
 $dingWebhook = $this->dao->select('*')->from(TABLE_WEBHOOK)
     ->where('type')->eq('dinguser')
