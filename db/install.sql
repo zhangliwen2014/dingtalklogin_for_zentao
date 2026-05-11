@@ -1,0 +1,2 @@
+-- 钉钉登录插件安装 SQL
+-- 本插件无需创建新表，数据复用 zt_oauth 和 zt_webhook

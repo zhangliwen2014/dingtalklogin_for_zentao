@@ -1,0 +1,6 @@
+name=钉钉登录插件
+code=dingtalklogin
+author=Developer
+desc=为禅道提供钉钉扫码登录和企业内部应用免登功能。
+version=1.0
+zentaoCompatible=20.6
