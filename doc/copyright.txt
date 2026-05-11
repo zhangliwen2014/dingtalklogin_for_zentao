@@ -4,3 +4,4 @@ author=Developer
 desc=为禅道提供钉钉扫码登录和企业内部应用免登功能。
 version=1.0
 zentaoversion=20.6
+license=mit
