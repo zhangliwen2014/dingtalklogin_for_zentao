@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * The model file of dingtalklogin module of ZenTaoPMS.
  *
@@ -7,6 +6,7 @@ declare(strict_types=1);
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Developer <dev@example.com>
  * @package     dingtalklogin
+ * @version     $Id$
  * @link        https://www.zentao.net
  */
 class dingtalkloginModel extends model
@@ -59,18 +59,5 @@ class dingtalkloginModel extends model
         if(empty($user) || $user->deleted) return false;
 
         return $user;
-    }
-
-    /**
-     * 获取钉钉 webhook 配置。
-     * 实际实现在 dingtalkloginTao::getDingWebhook() 中。
-     *
-     * @access public
-     * @return object|false
-     */
-    public function getDingWebhook(): object|false
-    {
-        /* 由 dingtalkloginTao 覆盖实现 */
-        return false;
     }
 }

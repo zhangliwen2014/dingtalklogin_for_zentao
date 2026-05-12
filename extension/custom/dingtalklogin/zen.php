@@ -7,6 +7,7 @@ declare(strict_types=1);
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Developer <dev@example.com>
  * @package     dingtalklogin
+ * @version     $Id$
  * @link        https://www.zentao.net
  */
 class dingtalkloginZen extends dingtalklogin
@@ -60,10 +61,10 @@ class dingtalkloginZen extends dingtalklogin
      * Process login: check binding and write Zentao session.
      *
      * @param  string $userid  DingTalk userid
-     * @access public
+     * @access protected
      * @return array
      */
-    public function processLogin(string $userid): array
+    protected function processLogin(string $userid): array
     {
         $user = $this->dingtalklogin->getBoundUser($userid);
         if($user === false)
@@ -81,10 +82,10 @@ class dingtalkloginZen extends dingtalklogin
      * 生成 CSRF state 并存入 session。
      * Generate CSRF state and store in session.
      *
-     * @access public
+     * @access protected
      * @return string
      */
-    public function generateState(): string
+    protected function generateState(): string
     {
         $state = md5(uniqid((string)mt_rand(), true));
         $this->session->set('dingtalkState', $state);
@@ -95,10 +96,10 @@ class dingtalkloginZen extends dingtalklogin
      * 构建扫码登录回调地址。
      * Build scan login callback URL.
      *
-     * @access public
+     * @access protected
      * @return string
      */
-    public function getCallbackUrl(): string
+    protected function getCallbackUrl(): string
     {
         return common::getSysURL() . $this->createLink('dingtalklogin', 'callback');
     }

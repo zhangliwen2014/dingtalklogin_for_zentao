@@ -7,6 +7,7 @@ declare(strict_types=1);
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Developer <dev@example.com>
  * @package     dingtalklogin
+ * @version     $Id$
  * @link        https://www.zentao.net
  */
 class dingtalklogin extends control
@@ -35,8 +36,6 @@ class dingtalklogin extends control
         $this->view->callbackUrl = $callbackUrl;
         $this->view->state       = $state;
 
-        /* 禅道 20.6 默认走 ZIN 框架，scan 视图使用传统格式，强制回传统模式 */
-        $_GET['zin'] = '0';
         $this->display();
     }
 
@@ -94,9 +93,6 @@ class dingtalklogin extends control
 
             $this->view->title  = $this->lang->dingtalklogin->common;
             $this->view->appKey = $webhook->secret->appKey;
-
-            /* 免登页面也强制传统模式 */
-            $_GET['zin'] = '0';
             $this->display();
             return;
         }

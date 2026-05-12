@@ -7,6 +7,7 @@ declare(strict_types=1);
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Developer <dev@example.com>
  * @package     dingtalklogin
+ * @version     $Id$
  * @link        https://www.zentao.net
  */
 class dingtalkloginTao extends dingtalkloginModel
@@ -18,10 +19,10 @@ class dingtalkloginTao extends dingtalkloginModel
      * @param  string $code       tmp_auth_code from scan callback
      * @param  string $appKey     DingTalk app key
      * @param  string $appSecret  DingTalk app secret
-     * @access public
+     * @access protected
      * @return string|false
      */
-    public function getUseridByScanCode(string $code, string $appKey, string $appSecret): string|false
+    protected function getUseridByScanCode(string $code, string $appKey, string $appSecret): string|false
     {
         $this->app->loadClass('dingapi', true);
         $dingapi = new dingapi($appKey, $appSecret, '');
@@ -49,10 +50,10 @@ class dingtalkloginTao extends dingtalkloginModel
      * @param  string $authCode   authCode from JSAPI dd.runtime.permission.requestAuthCode
      * @param  string $appKey     DingTalk app key
      * @param  string $appSecret  DingTalk app secret
-     * @access public
+     * @access protected
      * @return string|false
      */
-    public function getUseridByAuthCode(string $authCode, string $appKey, string $appSecret): string|false
+    protected function getUseridByAuthCode(string $authCode, string $appKey, string $appSecret): string|false
     {
         $this->app->loadClass('dingapi', true);
         $dingapi = new dingapi($appKey, $appSecret, '');

@@ -6,6 +6,7 @@
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Developer <dev@example.com>
  * @package     dingtalklogin
+ * @version     $Id$
  * @link        https://www.zentao.net
  */
 ?>

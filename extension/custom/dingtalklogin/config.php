@@ -7,11 +7,12 @@ declare(strict_types=1);
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Developer <dev@example.com>
  * @package     dingtalklogin
+ * @version     $Id$
  * @link        https://www.zentao.net
  */
 $config->dingtalklogin = new stdclass();
 
-/* Methods that do not require login (use openMethods in ZenTao 20.x). */
+/* 未登录用户可以访问的方法。Methods that do not require login. */
 $config->openMethods[] = 'dingtalklogin.scan';
 $config->openMethods[] = 'dingtalklogin.callback';
 $config->openMethods[] = 'dingtalklogin.sso';
