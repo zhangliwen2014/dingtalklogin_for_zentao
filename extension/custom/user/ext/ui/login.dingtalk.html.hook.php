@@ -3,13 +3,22 @@
  * Hook to inject embedded DingTalk QR code scan into user login page (ZIN ui mode).
  *
  * In ZIN mode $this points to zin\context, use $this->control to access baseControl.
+ * Use window.waitDom() (ZIN built-in helper) instead of DOMContentLoaded
+ * to safely manipulate DOM elements that are rendered asynchronously by ZIN widgets.
  */
 
 $control = $this->control;
 $control->app->loadLang('dingtalklogin');
 
-$webhook = $control->dingtalklogin->getDingWebhook();
+/* 直接查询 webhook，不依赖 $control->dingtalklogin（Hook 中 Model 加载可能为 null） */
+$webhook = $control->dao->select('*')->from(\TABLE_WEBHOOK)
+    ->where('type')->eq('dinguser')
+    ->andWhere('deleted')->eq('0')
+    ->fetch();
 if(empty($webhook)) return;
+
+$webhook->secret = json_decode($webhook->secret);
+if(empty($webhook->secret->appKey) || empty($webhook->secret->appSecret)) return;
 
 $appKey      = $webhook->secret->appKey;
 $state       = md5(uniqid((string)mt_rand(), true));
@@ -19,7 +28,7 @@ $gotoUrl     = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=' .
 $dingBtnText = isset($control->lang->dingtalklogin->loginWithDing) ? $control->lang->dingtalklogin->loginWithDing : '钉钉登录';
 ?><script src="https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+window.waitDom('#loginForm', function() {
     var loginForm = document.getElementById('loginForm');
     if(!loginForm) return;
 

@@ -5,8 +5,15 @@
 
 $this->app->loadLang('dingtalklogin');
 
-$webhook = $this->dingtalklogin->getDingWebhook();
+/* 直接查询 webhook，不依赖 $this->dingtalklogin（Hook 中 Model 加载可能为 null） */
+$webhook = $this->dao->select('*')->from(TABLE_WEBHOOK)
+    ->where('type')->eq('dinguser')
+    ->andWhere('deleted')->eq('0')
+    ->fetch();
 if(empty($webhook)) return;
+
+$webhook->secret = json_decode($webhook->secret);
+if(empty($webhook->secret->appKey) || empty($webhook->secret->appSecret)) return;
 
 $appKey      = $webhook->secret->appKey;
 $state       = md5(uniqid((string)mt_rand(), true));
