@@ -53,19 +53,24 @@ class dingtalklogin extends control
 
         if(empty($code) || empty($state))
         {
+            $this->session->set('dingtalkError', '缺少授权参数 code 或 state');
             return $this->locate($this->createLink('user', 'login'));
         }
+
+        /* 调试：记录 state 比对信息（上线后可删除） */
+        $sessionState = $this->session->dingtalkState;
+        $this->app->logInfo("dingtalklogin callback: urlState={$state}, sessionState={$sessionState}, code={$code}");
 
         $result = $this->dingtalkloginZen->handleCallback($code, $state);
 
         if($result['result'] === 'fail')
         {
-            /* 将错误信息写入 session，登录页 Hook 可读取并提示用户 */
             $this->session->set('dingtalkError', $result['message']);
+            $this->app->logInfo("dingtalklogin callback fail: " . $result['message']);
             return $this->locate($this->createLink('user', 'login'));
         }
 
-        /* 扫码回调被浏览器直接访问，必须使用 locate 重定向，不能返回 JSON */
+        $this->app->logInfo("dingtalklogin callback success, locate=" . $result['locate']);
         return $this->locate($result['locate']);
     }
 

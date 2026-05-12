@@ -32,6 +32,15 @@ window.waitDom('#loginForm', function() {
     var loginForm = document.getElementById('loginForm');
     if(!loginForm) return;
 
+    /* 显示钉钉登录错误提示（如有） */
+    <?php if(isset($control->session->dingtalkError) && $control->session->dingtalkError): ?>
+    var errorDiv = document.createElement('div');
+    errorDiv.className = 'form-group w-full';
+    errorDiv.innerHTML = '<div class="alert alert-danger"><?php echo $control->session->dingtalkError; ?></div>';
+    loginForm.insertBefore(errorDiv, loginForm.firstChild);
+    <?php $control->session->set('dingtalkError', null); ?>
+    <?php endif; ?>
+
     // 在表单底部添加"或"分隔线 + 钉钉登录按钮
     var lastGroup = loginForm.querySelector('.form-group:last-child');
     var dingWrap = document.createElement('div');

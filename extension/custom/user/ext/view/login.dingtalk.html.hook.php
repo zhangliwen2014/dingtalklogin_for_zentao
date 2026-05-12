@@ -27,6 +27,12 @@ $(function() {
     var $form = $('#loginForm, #loginPanel form').first();
     if(!$form.length) return;
 
+    /* 显示钉钉登录错误提示（如有） */
+    <?php if(isset($this->session->dingtalkError) && $this->session->dingtalkError): ?>
+    $form.before('<div class="alert alert-danger"><?php echo $this->session->dingtalkError; ?></div>');
+    <?php $this->session->set('dingtalkError', null); ?>
+    <?php endif; ?>
+
     // 在表单底部添加"或"分隔线 + 钉钉登录按钮
     var $lastRow = $form.find('tr:last, .form-group:last').first();
     if(!$lastRow.length) $lastRow = $form;
