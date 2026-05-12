@@ -66,16 +66,33 @@ class dingtalkloginZen extends dingtalklogin
      */
     protected function processLogin(string $userid): array
     {
-        $user = $this->dingtalklogin->getBoundUser($userid);
-        if($user === false)
+        $users = $this->dingtalklogin->getBoundUsers($userid);
+        if(empty($users))
         {
             return array('result' => 'fail', 'message' => $this->lang->dingtalklogin->error->notBind);
         }
 
+        if(count($users) > 1)
+        {
+            return array('result' => 'multi', 'users' => $users);
+        }
+
+        $this->doLogin($users[0]);
+        return array('result' => 'success', 'locate' => $this->config->webRoot);
+    }
+
+    /**
+     * 执行禅道登录并记录日志。
+     * Perform Zentao login and create action log.
+     *
+     * @param  object $user  user object
+     * @access protected
+     * @return void
+     */
+    protected function doLogin(object $user): void
+    {
         $this->loadModel('user')->login($user);
         $this->loadModel('action')->create('user', (int)$user->id, 'login');
-
-        return array('result' => 'success', 'locate' => $this->config->webRoot);
     }
 
     /**

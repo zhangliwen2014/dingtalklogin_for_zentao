@@ -24,7 +24,8 @@ $appKey      = $webhook->secret->appKey;
 $state       = md5(uniqid((string)mt_rand(), true));
 $control->session->set('dingtalkState', $state);
 $callbackUrl = common::getSysURL() . $control->createLink('dingtalklogin', 'callback');
-$gotoUrl     = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=' . $appKey . '&response_type=code&scope=snsapi_login&state=' . $state . '&redirect_uri=' . urlencode($callbackUrl);
+/* redirect_uri 不要 urlencode，钉钉服务端会自行处理；encode 反而导致重定向地址异常 */
+$gotoUrl     = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=' . $appKey . '&response_type=code&scope=snsapi_login&state=' . $state . '&redirect_uri=' . $callbackUrl;
 $dingBtnText = isset($control->lang->dingtalklogin->loginWithDing) ? $control->lang->dingtalklogin->loginWithDing : '钉钉登录';
 ?><script src="https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js"></script>
 <script>

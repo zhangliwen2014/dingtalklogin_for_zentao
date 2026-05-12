@@ -39,7 +39,36 @@ class dingtalkloginModel extends model
     }
 
     /**
-     * 查询钉钉用户是否已绑定禅道账号。
+     * 查询钉钉用户绑定的所有禅道账号（支持一对多）。
+     * Get all Zentao accounts bound to a DingTalk user.
+     *
+     * @param  string $userid  DingTalk userid
+     * @access public
+     * @return array
+     */
+    public function getBoundUsers(string $userid): array
+    {
+        $oauths = $this->dao->select('*')->from(TABLE_OAUTH)
+            ->where('openID')->eq($userid)
+            ->andWhere('providerType')->eq('webhook')
+            ->fetchAll();
+
+        if(empty($oauths)) return array();
+
+        $users = array();
+        foreach($oauths as $oauth)
+        {
+            $user = $this->loadModel('user')->getById($oauth->account, 'account');
+            if(!empty($user) && !$user->deleted)
+            {
+                $users[] = $user;
+            }
+        }
+        return $users;
+    }
+
+    /**
+     * 查询钉钉用户是否已绑定禅道账号（兼容旧接口，只返回第一个）。
      * Check if a DingTalk user is bound to a Zentao account.
      *
      * @param  string $userid  DingTalk userid
@@ -48,16 +77,7 @@ class dingtalkloginModel extends model
      */
     public function getBoundUser(string $userid): object|false
     {
-        $oauth = $this->dao->select('*')->from(TABLE_OAUTH)
-            ->where('openID')->eq($userid)
-            ->andWhere('providerType')->eq('webhook')
-            ->fetch();
-
-        if(empty($oauth)) return false;
-
-        $user = $this->loadModel('user')->getById($oauth->account, 'account');
-        if(empty($user) || $user->deleted) return false;
-
-        return $user;
+        $users = $this->getBoundUsers($userid);
+        return empty($users) ? false : $users[0];
     }
 }

@@ -57,21 +57,49 @@ class dingtalklogin extends control
             return $this->locate($this->createLink('user', 'login'));
         }
 
-        /* 调试：记录 state 比对信息（上线后可删除） */
-        $sessionState = $this->session->dingtalkState;
-        $this->app->logInfo("dingtalklogin callback: urlState={$state}, sessionState={$sessionState}, code={$code}");
-
         $result = $this->dingtalkloginZen->handleCallback($code, $state);
 
         if($result['result'] === 'fail')
         {
             $this->session->set('dingtalkError', $result['message']);
-            $this->app->logInfo("dingtalklogin callback fail: " . $result['message']);
             return $this->locate($this->createLink('user', 'login'));
         }
 
-        $this->app->logInfo("dingtalklogin callback success, locate=" . $result['locate']);
+        if($result['result'] === 'multi')
+        {
+            $this->view->users = $result['users'];
+            $this->display('choose');
+            return;
+        }
+
         return $this->locate($result['locate']);
+    }
+
+    /**
+     * 多账号选择登录。
+     * Choose account when multiple Zentao users are bound to one DingTalk user.
+     *
+     * @access public
+     * @return void
+     */
+    public function choose()
+    {
+        $account = $this->post->account;
+        if(empty($account))
+        {
+            return $this->locate($this->createLink('user', 'login'));
+        }
+
+        $user = $this->loadModel('user')->getById($account, 'account');
+        if(empty($user) || $user->deleted)
+        {
+            $this->session->set('dingtalkError', $this->lang->dingtalklogin->error->notBind);
+            return $this->locate($this->createLink('user', 'login'));
+        }
+
+        $this->loadModel('user')->login($user);
+        $this->loadModel('action')->create('user', (int)$user->id, 'login');
+        return $this->locate($this->config->webRoot);
     }
 
     /**

@@ -15,4 +15,5 @@ $config->dingtalklogin = new stdclass();
 /* 未登录用户可以访问的方法。Methods that do not require login. */
 $config->openMethods[] = 'dingtalklogin.scan';
 $config->openMethods[] = 'dingtalklogin.callback';
+$config->openMethods[] = 'dingtalklogin.choose';
 $config->openMethods[] = 'dingtalklogin.sso';
