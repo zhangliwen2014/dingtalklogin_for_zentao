@@ -51,6 +51,11 @@ class dingtalklogin extends control
         $code  = $this->get->code;
         $state = $this->get->state;
 
+        /* 文件级调试日志，不受框架日志配置影响 */
+        $logFile = $this->app->logRoot . 'dingtalk_debug.log';
+        $logMsg  = date('Y-m-d H:i:s') . ' callback reached, code=' . (empty($code) ? 'EMPTY' : substr($code, 0, 20)) . ', state=' . (empty($state) ? 'EMPTY' : $state) . ', sessionState=' . ($this->session->dingtalkState ?? 'NULL') . PHP_EOL;
+        file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
+
         if(empty($code) || empty($state))
         {
             $this->session->set('dingtalkError', '缺少授权参数 code 或 state');

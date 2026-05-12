@@ -24,8 +24,6 @@ $appKey      = $webhook->secret->appKey;
 $state       = md5(uniqid((string)mt_rand(), true));
 $control->session->set('dingtalkState', $state);
 $callbackUrl = common::getSysURL() . $control->createLink('dingtalklogin', 'callback');
-/* redirect_uri 不要 urlencode，钉钉服务端会自行处理；encode 反而导致重定向地址异常 */
-$gotoUrl     = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=' . $appKey . '&response_type=code&scope=snsapi_login&state=' . $state . '&redirect_uri=' . $callbackUrl;
 $dingBtnText = isset($control->lang->dingtalklogin->loginWithDing) ? $control->lang->dingtalklogin->loginWithDing : '钉钉登录';
 ?><script src="https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js"></script>
 <script>
@@ -82,8 +80,8 @@ window.waitDom('#loginForm', function() {
         document.querySelector('.dingtalk-login-wrap').style.display = 'none';
         qrcodeWrap.style.display = 'block';
 
-        var gotoUrl = <?php echo json_encode($gotoUrl); ?>;
-        var gotoEncoded = encodeURIComponent(gotoUrl);
+        var state = <?php echo json_encode($state); ?>;
+        var callbackUrl = <?php echo json_encode($callbackUrl); ?>;
         var container = document.getElementById('dingtalk_login_container');
 
         if(typeof DDLogin === 'undefined') {
@@ -92,9 +90,11 @@ window.waitDom('#loginForm', function() {
         }
 
         container.innerHTML = '';
+        /* goto 参数只需要包含 appid 和 redirect_uri（供钉钉校验），扫码后由我们自己处理跳转 */
+        var gotoUrl = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=<?php echo $appKey; ?>&response_type=code&scope=snsapi_login&state=' + encodeURIComponent(state) + '&redirect_uri=' + encodeURIComponent(callbackUrl);
         DDLogin({
             id: "dingtalk_login_container",
-            goto: gotoEncoded,
+            goto: encodeURIComponent(gotoUrl),
             style: "border:none;background-color:#FFFFFF;",
             width: "365",
             height: "400"
@@ -102,7 +102,8 @@ window.waitDom('#loginForm', function() {
 
         var handleMessage = function(event) {
             if(event.origin !== "https://login.dingtalk.com") return;
-            window.location.href = gotoUrl + "&loginTmpCode=" + encodeURIComponent(event.data);
+            /* 企业内部应用：直接用 loginTmpCode 调用后端 callback，不走钉钉 sns_authorize 重定向 */
+            window.location.href = callbackUrl + '?code=' + encodeURIComponent(event.data) + '&state=' + encodeURIComponent(state);
         };
 
         if(window._dingtalkMsgHandler) {
