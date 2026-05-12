@@ -23,7 +23,8 @@ if(empty($webhook->secret->appKey) || empty($webhook->secret->appSecret)) return
 $appKey      = $webhook->secret->appKey;
 $state       = md5(uniqid((string)mt_rand(), true));
 $control->session->set('dingtalkState', $state);
-$callbackUrl = common::getSysURL() . $control->createLink('dingtalklogin', 'callback');
+/* 使用相对路径，避免 common::getSysURL() 在反向代理/HTTPS 环境下生成异常 URL */
+$callbackUrl = $control->createLink('dingtalklogin', 'callback');
 $dingBtnText = isset($control->lang->dingtalklogin->loginWithDing) ? $control->lang->dingtalklogin->loginWithDing : '钉钉登录';
 ?><script src="https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js"></script>
 <script>
