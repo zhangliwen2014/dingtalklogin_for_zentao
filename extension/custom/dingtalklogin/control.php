@@ -26,14 +26,17 @@ class dingtalklogin extends control
             return $this->send(array('result' => 'fail', 'message' => $this->lang->dingtalklogin->error->noConfig));
         }
 
-        $state        = $this->dingtalkloginZen->generateState();
-        $appKey       = $webhook->secret->appKey;
-        $callbackUrl  = $this->dingtalkloginZen->getCallbackUrl();
+        $state       = $this->dingtalkloginZen->generateState();
+        $appKey      = $webhook->secret->appKey;
+        $callbackUrl = $this->dingtalkloginZen->getCallbackUrl();
 
         $this->view->title       = $this->lang->dingtalklogin->scanTitle;
         $this->view->appKey      = $appKey;
         $this->view->callbackUrl = $callbackUrl;
         $this->view->state       = $state;
+
+        /* 禅道 20.6 默认走 ZIN 框架，scan 视图使用传统格式，强制回传统模式 */
+        $_GET['zin'] = '0';
         $this->display();
     }
 
@@ -91,6 +94,9 @@ class dingtalklogin extends control
 
             $this->view->title  = $this->lang->dingtalklogin->common;
             $this->view->appKey = $webhook->secret->appKey;
+
+            /* 免登页面也强制传统模式 */
+            $_GET['zin'] = '0';
             $this->display();
             return;
         }

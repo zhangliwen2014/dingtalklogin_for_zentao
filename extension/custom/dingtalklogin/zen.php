@@ -17,10 +17,10 @@ class dingtalkloginZen extends dingtalklogin
      *
      * @param  string $code   authorization code from DingTalk
      * @param  string $state  CSRF state parameter
-     * @access protected
+     * @access public
      * @return array
      */
-    protected function handleCallback(string $code, string $state): array
+    public function handleCallback(string $code, string $state): array
     {
         if($state !== $this->session->dingtalkState)
         {
@@ -41,10 +41,10 @@ class dingtalkloginZen extends dingtalklogin
      * Handle SSO login.
      *
      * @param  string $authCode  authCode from DingTalk JSAPI
-     * @access protected
+     * @access public
      * @return array
      */
-    protected function handleSso(string $authCode): array
+    public function handleSso(string $authCode): array
     {
         $userid = $this->dingtalklogin->getUseridByCode('sso', $authCode);
         if($userid === false)
@@ -60,10 +60,10 @@ class dingtalkloginZen extends dingtalklogin
      * Process login: check binding and write Zentao session.
      *
      * @param  string $userid  DingTalk userid
-     * @access protected
+     * @access public
      * @return array
      */
-    protected function processLogin(string $userid): array
+    public function processLogin(string $userid): array
     {
         $user = $this->dingtalklogin->getBoundUser($userid);
         if($user === false)
@@ -81,10 +81,10 @@ class dingtalkloginZen extends dingtalklogin
      * 生成 CSRF state 并存入 session。
      * Generate CSRF state and store in session.
      *
-     * @access protected
+     * @access public
      * @return string
      */
-    protected function generateState(): string
+    public function generateState(): string
     {
         $state = md5(uniqid((string)mt_rand(), true));
         $this->session->set('dingtalkState', $state);
@@ -95,10 +95,10 @@ class dingtalkloginZen extends dingtalklogin
      * 构建扫码登录回调地址。
      * Build scan login callback URL.
      *
-     * @access protected
+     * @access public
      * @return string
      */
-    protected function getCallbackUrl(): string
+    public function getCallbackUrl(): string
     {
         return common::getSysURL() . $this->createLink('dingtalklogin', 'callback');
     }

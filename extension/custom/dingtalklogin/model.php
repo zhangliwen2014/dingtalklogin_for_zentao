@@ -62,14 +62,15 @@ class dingtalkloginModel extends model
     }
 
     /**
-     * 获取钉钉工作消息 webhook 配置。
-     * Get DingTalk webhook configuration.
+     * 获取钉钉 webhook 配置。
+     * 实际实现在 dingtalkloginTao::getDingWebhook() 中。
      *
      * @access public
      * @return object|false
      */
     public function getDingWebhook(): object|false
     {
-        return $this->getDingWebhook();
+        /* 由 dingtalkloginTao 覆盖实现 */
+        return false;
     }
 }

@@ -18,10 +18,10 @@ class dingtalkloginTao extends dingtalkloginModel
      * @param  string $code       tmp_auth_code from scan callback
      * @param  string $appKey     DingTalk app key
      * @param  string $appSecret  DingTalk app secret
-     * @access protected
+     * @access public
      * @return string|false
      */
-    protected function getUseridByScanCode(string $code, string $appKey, string $appSecret): string|false
+    public function getUseridByScanCode(string $code, string $appKey, string $appSecret): string|false
     {
         $this->app->loadClass('dingapi', true);
         $dingapi = new dingapi($appKey, $appSecret, '');
@@ -49,10 +49,10 @@ class dingtalkloginTao extends dingtalkloginModel
      * @param  string $authCode   authCode from JSAPI dd.runtime.permission.requestAuthCode
      * @param  string $appKey     DingTalk app key
      * @param  string $appSecret  DingTalk app secret
-     * @access protected
+     * @access public
      * @return string|false
      */
-    protected function getUseridByAuthCode(string $authCode, string $appKey, string $appSecret): string|false
+    public function getUseridByAuthCode(string $authCode, string $appKey, string $appSecret): string|false
     {
         $this->app->loadClass('dingapi', true);
         $dingapi = new dingapi($appKey, $appSecret, '');
@@ -78,10 +78,10 @@ class dingtalkloginTao extends dingtalkloginModel
      * 获取第一个有效的 dinguser webhook 配置。
      * Get the first valid dinguser webhook config.
      *
-     * @access protected
+     * @access public
      * @return object|false
      */
-    protected function getDingWebhook(): object|false
+    public function getDingWebhook(): object|false
     {
         $webhook = $this->dao->select('*')->from(TABLE_WEBHOOK)
             ->where('type')->eq('dinguser')

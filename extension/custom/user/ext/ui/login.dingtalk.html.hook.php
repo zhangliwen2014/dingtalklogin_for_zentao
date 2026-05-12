@@ -1,23 +1,25 @@
 <?php
 /**
- * Hook to inject DingTalk login button into user login page (traditional view mode).
+ * Hook to inject DingTalk login button into user login page (ZIN ui mode).
+ * In ZIN mode $this points to zin\context, use $this->control to access baseControl.
  */
 
-$this->app->loadLang('dingtalklogin');
+$control = $this->control;
+$control->app->loadLang('dingtalklogin');
 
-$dingWebhook = $this->dao->select('*')->from(TABLE_WEBHOOK)
+$dingWebhook = $control->dao->select('*')->from(\TABLE_WEBHOOK)
     ->where('type')->eq('dinguser')
     ->andWhere('deleted')->eq('0')
     ->fetch();
 if(empty($dingWebhook)) return;
 
-$dingLink    = helper::createLink('dingtalklogin', 'scan');
-$dingBtnText = isset($lang->dingtalklogin->loginWithDing) ? $lang->dingtalklogin->loginWithDing : '钉钉登录';
+$dingLink    = $control->createLink('dingtalklogin', 'scan');
+$dingBtnText = isset($control->lang->dingtalklogin->loginWithDing) ? $control->lang->dingtalklogin->loginWithDing : '钉钉登录';
 ?>
 <script>
 $(function() {
     var $target = $('#loginPanel form .form-actions');
-    if($target.length === 0) $target = $('table.table-form tbody tr:last td');
+    if($target.length === 0) $target = $('.form-actions');
     if($target.length === 0) $target = $('#loginForm').closest('.cell').find('.form-group:last');
     if($target.length === 0) return;
 
