@@ -11,5 +11,7 @@ declare(strict_types=1);
  */
 $config->dingtalklogin = new stdclass();
 
-/* Methods that do not require login. */
-$config->dingtalklogin->noLoginMethods = array('scan', 'callback', 'sso');
+/* Methods that do not require login (use openMethods in ZenTao 20.x). */
+$config->openMethods[] = 'dingtalklogin.scan';
+$config->openMethods[] = 'dingtalklogin.callback';
+$config->openMethods[] = 'dingtalklogin.sso';
