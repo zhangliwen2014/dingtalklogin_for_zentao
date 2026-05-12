@@ -60,10 +60,13 @@ class dingtalklogin extends control
 
         if($result['result'] === 'fail')
         {
-            return $this->send(array('result' => 'fail', 'load' => array('alert' => $result['message'], 'locate' => $this->createLink('user', 'login'))));
+            /* 将错误信息写入 session，登录页 Hook 可读取并提示用户 */
+            $this->session->set('dingtalkError', $result['message']);
+            return $this->locate($this->createLink('user', 'login'));
         }
 
-        return $this->send(array('result' => 'success', 'locate' => $result['locate']));
+        /* 扫码回调被浏览器直接访问，必须使用 locate 重定向，不能返回 JSON */
+        return $this->locate($result['locate']);
     }
 
     /**
