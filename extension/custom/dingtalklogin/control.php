@@ -77,7 +77,11 @@ class dingtalklogin extends control
             return;
         }
 
-        return $this->locate($result['locate']);
+        /* 单账号：使用 HTML 跳转替代 locate()，确保 session 完全写入后再跳转 */
+        $locateUrl   = $result['locate'];
+        $userAccount = (isset($_SESSION['user']) && is_object($_SESSION['user']) && !empty($_SESSION['user']->account)) ? $_SESSION['user']->account : 'NOT_SET';
+        echo "<!DOCTYPE html><html><head><meta charset='utf-8'><meta http-equiv='refresh' content='1;url={$locateUrl}'></head><body><p>登录成功，用户：{$userAccount}</p><p>正在跳转...</p><p><a href='{$locateUrl}'>如未自动跳转请点击这里</a></p></body></html>";
+        exit;
     }
 
     /**
