@@ -102,9 +102,16 @@ class dingtalklogin extends control
             return $this->locate($this->createLink('user', 'login'));
         }
 
-        $this->loadModel('user')->login($user);
+        $result = $this->loadModel('user')->login($user);
+        if($result === false)
+        {
+            $this->session->set('dingtalkError', '登录失败，请检查禅道用户状态');
+            return $this->locate($this->createLink('user', 'login'));
+        }
+
         $this->loadModel('action')->create('user', (int)$user->id, 'login');
-        return $this->locate($this->config->webRoot);
+        session_write_close();
+        return $this->locate($this->createLink('my', 'index'));
     }
 
     /**

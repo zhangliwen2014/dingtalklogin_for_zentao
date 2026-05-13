@@ -77,8 +77,14 @@ class dingtalkloginZen extends dingtalklogin
             return array('result' => 'multi', 'users' => $users);
         }
 
-        $this->doLogin($users[0]);
-        return array('result' => 'success', 'locate' => $this->config->webRoot);
+        $loginResult = $this->doLogin($users[0]);
+        if(!$loginResult)
+        {
+            return array('result' => 'fail', 'message' => '登录失败，请检查禅道用户状态');
+        }
+
+        /* 使用明确的 my-index 跳转，避免 webRoot 为空或指向根路径时再次触发登录检查 */
+        return array('result' => 'success', 'locate' => $this->createLink('my', 'index'));
     }
 
     /**
@@ -87,12 +93,25 @@ class dingtalkloginZen extends dingtalklogin
      *
      * @param  object $user  user object
      * @access protected
-     * @return void
+     * @return bool
      */
-    protected function doLogin(object $user): void
+    protected function doLogin(object $user): bool
     {
-        $this->loadModel('user')->login($user);
+        $result = $this->loadModel('user')->login($user);
+        if($result === false)
+        {
+            $logFile = $this->app->logRoot . 'dingtalk_debug.log';
+            $logMsg  = date('Y-m-d H:i:s') . ' doLogin FAILED: account=' . ($user->account ?? 'NULL') . ', id=' . ($user->id ?? 'NULL') . PHP_EOL;
+            file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
+            return false;
+        }
+
         $this->loadModel('action')->create('user', (int)$user->id, 'login');
+
+        /* 强制写入 session，避免 locate() 抛异常后 session 未及时落盘 */
+        session_write_close();
+
+        return true;
     }
 
     /**
