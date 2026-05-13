@@ -48,9 +48,11 @@ class dingtalklogin extends control
      */
     public function callback()
     {
-        /* 优先从 $_GET 读取，防止禅道 get 对象在 PATH_INFO + query string 模式下解析异常 */
-        $code  = $_GET['code']  ?? ($this->get->code  ?? '');
-        $state = $_GET['state'] ?? ($this->get->state ?? '');
+        /* 禅道 PATH_INFO 模式下 $_GET 被框架重置，必须从 QUERY_STRING 手动解析钉钉回调参数 */
+        $queryParams = array();
+        if(!empty($_SERVER['QUERY_STRING'])) parse_str($_SERVER['QUERY_STRING'], $queryParams);
+        $code  = $queryParams['code']  ?? ($this->get->code  ?? '');
+        $state = $queryParams['state'] ?? ($this->get->state ?? '');
 
         $this->view->title        = '钉钉登录回调调试';
         $this->view->code         = $code;
@@ -64,10 +66,10 @@ class dingtalklogin extends control
         $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $logMsg  = date('Y-m-d H:i:s') . ' CALLBACK client=' . $clientIp
                  . ' query_string=' . ($_SERVER['QUERY_STRING'] ?? 'EMPTY')
+                 . ' parsed_code=' . ($code ?? 'EMPTY')
+                 . ' parsed_state=' . ($state ?? 'EMPTY')
                  . ' GET_code=' . ($_GET['code'] ?? 'EMPTY')
                  . ' GET_state=' . ($_GET['state'] ?? 'EMPTY')
-                 . ' obj_code=' . ($this->get->code ?? 'EMPTY')
-                 . ' obj_state=' . ($this->get->state ?? 'EMPTY')
                  . ' sessionState=' . ($this->session->dingtalkState ?? 'NULL')
                  . PHP_EOL;
         file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
