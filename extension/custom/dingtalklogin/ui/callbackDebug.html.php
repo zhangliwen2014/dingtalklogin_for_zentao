@@ -52,7 +52,7 @@ div(
             ),
 
             /* 错误提示 */
-            !empty($error) ? div(setClass('alert alert-danger'), $error) : null,
+            !empty($error) ? div(setClass('alert alert-danger'), $error) : html(''),
 
             /* 绑定用户列表 + 确认表单 */
             empty($error) && !empty($users) ? div(setClass('panel panel-default'), setStyle(array('margin-bottom' => '15px')),
@@ -68,12 +68,12 @@ div(
                         )
                     )
                 )
-            ) : null,
+            ) : html(''),
 
             /* 无用户时的返回按钮 */
             !empty($error) && empty($users) ? div(setStyle(array('margin-top' => '20px')),
                 html('<a href="' . $loginLink . '" class="btn btn-wide">返回登录页</a>')
-            ) : null
+            ) : html('')
         )
     )
 );
