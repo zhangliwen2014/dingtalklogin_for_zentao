@@ -137,6 +137,9 @@ class dingtalkloginZen extends dingtalklogin
      */
     protected function getCallbackUrl(): string
     {
-        return common::getSysURL() . $this->createLink('dingtalklogin', 'callback');
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        if(!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        return $scheme . '://' . $host . $this->createLink('dingtalklogin', 'callback');
     }
 }

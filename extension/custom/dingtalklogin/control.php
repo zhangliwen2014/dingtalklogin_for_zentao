@@ -62,14 +62,14 @@ class dingtalklogin extends control
         if(empty($code) || empty($state))
         {
             $this->view->error = '缺少授权参数 code 或 state';
-            $this->display('callbackDebug');
+            $this->display('callbackdebug');
             return;
         }
 
         if($state !== $this->session->dingtalkState)
         {
             $this->view->error = 'state 校验失败：session 中的 state=' . ($this->session->dingtalkState ?? 'NULL') . '，传入的 state=' . $state;
-            $this->display('callbackDebug');
+            $this->display('callbackdebug');
             return;
         }
 
@@ -79,7 +79,7 @@ class dingtalklogin extends control
         if($userid === false)
         {
             $this->view->error = '无法获取钉钉用户信息，请检查 appKey/appSecret 配置';
-            $this->display('callbackDebug');
+            $this->display('callbackdebug');
             return;
         }
 
@@ -89,11 +89,11 @@ class dingtalklogin extends control
         if(empty($users))
         {
             $this->view->error = '未找到绑定的用户，请先在禅道后台 webhook 中绑定用户';
-            $this->display('callbackDebug');
+            $this->display('callbackdebug');
             return;
         }
 
-        $this->display('callbackDebug');
+        $this->display('callbackdebug');
     }
 
     /**
