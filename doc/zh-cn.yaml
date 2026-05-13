@@ -2,7 +2,7 @@ name: 钉钉登录插件
 code: dingtalklogin
 type: extension
 abstract: 为禅道提供钉钉扫码登录和企业内部应用免登功能。
-version: 1.0
+version: 1.0.1
 author: Developer
 email: dev@example.com
 site: https://www.zentao.net
@@ -10,4 +10,4 @@ zentao:
   compatible: 20.6
   depends: ~
 date: 2026-05-11
-license: ZPL
+license: "Copyright (C) 2026 by Liwen.Zhang"
