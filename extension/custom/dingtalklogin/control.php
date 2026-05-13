@@ -48,8 +48,9 @@ class dingtalklogin extends control
      */
     public function callback()
     {
-        $code  = $this->get->code;
-        $state = $this->get->state;
+        /* 优先从 $_GET 读取，防止禅道 get 对象在 PATH_INFO + query string 模式下解析异常 */
+        $code  = $_GET['code']  ?? ($this->get->code  ?? '');
+        $state = $_GET['state'] ?? ($this->get->state ?? '');
 
         $this->view->title        = '钉钉登录回调调试';
         $this->view->code         = $code;
@@ -59,9 +60,22 @@ class dingtalklogin extends control
         $this->view->userid       = '';
         $this->view->users        = array();
 
+        $logFile = $this->app->logRoot . 'dingtalk_callback.log';
+        $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $logMsg  = date('Y-m-d H:i:s') . ' CALLBACK client=' . $clientIp
+                 . ' query_string=' . ($_SERVER['QUERY_STRING'] ?? 'EMPTY')
+                 . ' GET_code=' . ($_GET['code'] ?? 'EMPTY')
+                 . ' GET_state=' . ($_GET['state'] ?? 'EMPTY')
+                 . ' obj_code=' . ($this->get->code ?? 'EMPTY')
+                 . ' obj_state=' . ($this->get->state ?? 'EMPTY')
+                 . ' sessionState=' . ($this->session->dingtalkState ?? 'NULL')
+                 . PHP_EOL;
+        file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
+
         if(empty($code) || empty($state))
         {
             $this->view->error = '缺少授权参数 code 或 state';
+            file_put_contents($logFile, date('Y-m-d H:i:s') . ' ERROR: 缺少 code 或 state' . PHP_EOL, FILE_APPEND | LOCK_EX);
             $this->display('callbackdebug');
             return;
         }
@@ -69,12 +83,14 @@ class dingtalklogin extends control
         if($state !== $this->session->dingtalkState)
         {
             $this->view->error = 'state 校验失败：session 中的 state=' . ($this->session->dingtalkState ?? 'NULL') . '，传入的 state=' . $state;
+            file_put_contents($logFile, date('Y-m-d H:i:s') . ' ERROR: state 不匹配 sessionState=' . ($this->session->dingtalkState ?? 'NULL') . ' inputState=' . $state . PHP_EOL, FILE_APPEND | LOCK_EX);
             $this->display('callbackdebug');
             return;
         }
 
         $userid = $this->dingtalklogin->getUseridByCode('scan', $code);
         $this->view->userid = $userid === false ? '获取失败' : $userid;
+        file_put_contents($logFile, date('Y-m-d H:i:s') . ' DECODE userid=' . ($userid === false ? 'FAIL' : $userid) . PHP_EOL, FILE_APPEND | LOCK_EX);
 
         if($userid === false)
         {
@@ -85,6 +101,8 @@ class dingtalklogin extends control
 
         $users = $this->dingtalklogin->getBoundUsers($userid);
         $this->view->users = $users;
+        $userAccounts = array_column($users, 'account');
+        file_put_contents($logFile, date('Y-m-d H:i:s') . ' BIND users=' . implode(',', $userAccounts) . ' count=' . count($users) . PHP_EOL, FILE_APPEND | LOCK_EX);
 
         if(empty($users))
         {
