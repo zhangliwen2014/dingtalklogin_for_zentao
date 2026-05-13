@@ -19,8 +19,17 @@ $appKey      = $webhook->secret->appKey;
 $state       = md5(uniqid((string)mt_rand(), true));
 $this->session->set('dingtalkState', $state);
 $callbackUrl = $this->createLink('dingtalklogin', 'callback');
-/* 钉钉校验 redirect_uri 时必须使用完整 URL（含协议+域名），否则无法匹配回调域名配置 */
-$fullCallbackUrl = common::getSysURL() . $callbackUrl;
+/* 动态构建完整 URL：兼容 nginx 反向代理、负载均衡等场景，不硬编码 */
+$scheme = 'http';
+if((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+   (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') ||
+   (isset($_SERVER['REQUEST_SCHEME']) && strtolower($_SERVER['REQUEST_SCHEME']) === 'https'))
+{
+    $scheme = 'https';
+}
+$host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+if(isset($_SERVER['HTTP_X_FORWARDED_HOST'])) $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
+$fullCallbackUrl = $scheme . '://' . $host . $callbackUrl;
 $dingBtnText = isset($lang->dingtalklogin->loginWithDing) ? $lang->dingtalklogin->loginWithDing : '钉钉登录';
 ?><script src="https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js"></script>
 <script>
@@ -33,6 +42,15 @@ $(function() {
     $form.before('<div class="alert alert-danger"><?php echo $this->session->dingtalkError; ?></div>');
     <?php $this->session->set('dingtalkError', null); ?>
     <?php endif; ?>
+
+    /* 显示前端调试信息（如有） */
+    var debugInfo = localStorage.getItem('dingtalkDebug');
+    if(debugInfo) {
+        try {
+            var d = JSON.parse(debugInfo);
+            $form.before('<div class="alert alert-info">钉钉调试: origin=' + d.origin + ', dataType=' + d.dataType + ', data=' + d.data + '</div>');
+        } catch(e) {}
+    }
 
     // 在表单底部添加"或"分隔线 + 钉钉登录按钮
     var $lastRow = $form.find('tr:last, .form-group:last').first();
@@ -93,6 +111,15 @@ $(function() {
         });
 
         var handleMessage = function(event) {
+            /* 前端调试：记录所有 postMessage 事件到 localStorage */
+            var debugInfo = {
+                time: new Date().toISOString(),
+                origin: event.origin,
+                dataType: typeof event.data,
+                data: typeof event.data === 'string' ? event.data.substring(0, 100) : JSON.stringify(event.data).substring(0, 100)
+            };
+            localStorage.setItem('dingtalkDebug', JSON.stringify(debugInfo));
+
             if(event.origin !== "https://login.dingtalk.com") return;
             /* 扫码成功后直接用 loginTmpCode 跳转到 callback，不走钉钉 sns_authorize 重定向 */
             window.location.href = callbackUrl + '?code=' + encodeURIComponent(event.data) + '&state=' + encodeURIComponent(state);
