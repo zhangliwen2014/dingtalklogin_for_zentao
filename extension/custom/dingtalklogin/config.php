@@ -12,7 +12,10 @@ declare(strict_types=1);
  */
 $config->dingtalklogin = new stdclass();
 
-/* 未登录用户可以访问的方法。Methods that do not require login. */
+/* 移除浏览器发送的 Sec-Fetch-Mode header，避免禅道对页面导航请求走特殊权限逻辑 */
+if(isset($_SERVER['HTTP_SEC_FETCH_MODE'])) unset($_SERVER['HTTP_SEC_FETCH_MODE']);
+
+/* 未登录用户可以访问的方法。Methods that do not require login。 */
 $config->openMethods[] = 'dingtalklogin.scan';
 $config->openMethods[] = 'dingtalklogin.callback';
 $config->openMethods[] = 'dingtalklogin.confirm';
