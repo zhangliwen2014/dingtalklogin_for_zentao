@@ -95,42 +95,86 @@ class dingtalklogin extends control
         {
             $this->view->error = '缺少授权参数 code 或 state';
             file_put_contents($logFile, date('Y-m-d H:i:s') . ' ERROR: 缺少 code 或 state' . PHP_EOL, FILE_APPEND | LOCK_EX);
-            $this->display('callbackdebug');
-            return;
         }
-
-        if($state !== $this->session->dingtalkState)
+        elseif($state !== $this->session->dingtalkState)
         {
             $this->view->error = 'state 校验失败：session 中的 state=' . ($this->session->dingtalkState ?? 'NULL') . '，传入的 state=' . $state;
             file_put_contents($logFile, date('Y-m-d H:i:s') . ' ERROR: state 不匹配 sessionState=' . ($this->session->dingtalkState ?? 'NULL') . ' inputState=' . $state . PHP_EOL, FILE_APPEND | LOCK_EX);
-            $this->display('callbackdebug');
-            return;
         }
-
-        $userid = $this->dingtalklogin->getUseridByCode('scan', $code);
-        $this->view->userid = $userid === false ? '获取失败' : $userid;
-        file_put_contents($logFile, date('Y-m-d H:i:s') . ' DECODE userid=' . ($userid === false ? 'FAIL' : $userid) . PHP_EOL, FILE_APPEND | LOCK_EX);
-
-        if($userid === false)
+        else
         {
-            $this->view->error = '无法获取钉钉用户信息，请检查 appKey/appSecret 配置';
-            $this->display('callbackdebug');
-            return;
+            $userid = $this->dingtalklogin->getUseridByCode('scan', $code);
+            $this->view->userid = $userid === false ? '获取失败' : $userid;
+            file_put_contents($logFile, date('Y-m-d H:i:s') . ' DECODE userid=' . ($userid === false ? 'FAIL' : $userid) . PHP_EOL, FILE_APPEND | LOCK_EX);
+
+            if($userid === false)
+            {
+                $this->view->error = '无法获取钉钉用户信息，请检查 appKey/appSecret 配置';
+            }
+            else
+            {
+                $users = $this->dingtalklogin->getBoundUsers($userid);
+                $this->view->users = $users;
+                $userAccounts = array_column($users, 'account');
+                file_put_contents($logFile, date('Y-m-d H:i:s') . ' BIND users=' . implode(',', $userAccounts) . ' count=' . count($users) . PHP_EOL, FILE_APPEND | LOCK_EX);
+
+                if(empty($users))
+                {
+                    $this->view->error = '未找到绑定的用户，请先在禅道后台 webhook 中绑定用户';
+                }
+            }
         }
 
-        $users = $this->dingtalklogin->getBoundUsers($userid);
-        $this->view->users = $users;
-        $userAccounts = array_column($users, 'account');
-        file_put_contents($logFile, date('Y-m-d H:i:s') . ' BIND users=' . implode(',', $userAccounts) . ' count=' . count($users) . PHP_EOL, FILE_APPEND | LOCK_EX);
+        /* 直接输出调试页面，绕过 ZIN 视图系统 */
+        $this->outputDebugPage();
+    }
 
-        if(empty($users))
+    /**
+     * 直接输出回调调试 HTML 页面。
+     * Output debug page directly without ZIN view system.
+     */
+    protected function outputDebugPage(): void
+    {
+        $code        = htmlspecialchars((string)$this->view->code);
+        $state       = htmlspecialchars((string)$this->view->state);
+        $sessionState = htmlspecialchars((string)$this->view->sessionState);
+        $error       = htmlspecialchars((string)$this->view->error);
+        $userid      = htmlspecialchars((string)$this->view->userid);
+        $users       = $this->view->users;
+        $loginLink   = helper::createLink('user', 'login');
+        $confirmLink = helper::createLink('dingtalklogin', 'confirm');
+
+        echo '<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><title>钉钉登录回调调试</title>';
+        echo '<style>body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;}#panel{max-width:700px;margin:0 auto;background:#fff;padding:40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1);}h2{font-size:24px;margin-bottom:20px;}table{width:100%;border-collapse:collapse;margin:15px 0;}th,td{border:1px solid #ddd;padding:10px;text-align:left;}th{background:#f0f0f0;font-weight:bold;}.alert{padding:12px 15px;border-radius:4px;margin:15px 0;}.alert-danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}.user-option{display:block;margin:8px 0;cursor:pointer;}button{background:#0c64eb;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:14px;}button:hover{background:#0a4ebd;}a.btn{display:inline-block;padding:8px 20px;border:1px solid #ccc;border-radius:4px;text-decoration:none;color:#333;margin-left:8px;}a.btn:hover{background:#f0f0f0;}</style>';
+        echo '</head><body><div id="panel"><h2>钉钉登录回调调试</h2>';
+
+        echo '<h3>回调参数</h3><table><tr><th>参数</th><th>值</th></tr>';
+        echo '<tr><td>code</td><td>' . $code . '</td></tr>';
+        echo '<tr><td>state</td><td>' . $state . '</td></tr>';
+        echo '<tr><td>sessionState</td><td>' . $sessionState . '</td></tr></table>';
+
+        echo '<h3>解密信息</h3><table><tr><th>项目</th><th>值</th></tr>';
+        echo '<tr><td>钉钉 userid</td><td>' . $userid . '</td></tr></table>';
+
+        if($error)
         {
-            $this->view->error = '未找到绑定的用户，请先在禅道后台 webhook 中绑定用户';
-            $this->display('callbackdebug');
-            return;
+            echo '<div class="alert alert-danger">' . $error . '</div>';
+            echo '<p><a href="' . $loginLink . '" class="btn">返回登录页</a></p>';
+        }
+        elseif(!empty($users))
+        {
+            echo '<h3>绑定用户列表（共 ' . count($users) . ' 个）</h3>';
+            echo '<form action="' . $confirmLink . '" method="post">';
+            foreach($users as $index => $user)
+            {
+                $checked = $index === 0 ? 'checked' : '';
+                echo '<label class="user-option"><input type="radio" name="account" value="' . htmlspecialchars((string)$user->account) . '" ' . $checked . '> ' . htmlspecialchars((string)$user->realname) . ' (' . htmlspecialchars((string)$user->account) . ')' . ($user->role ? ' [' . htmlspecialchars((string)$user->role) . ']' : '') . '</label>';
+            }
+            echo '<div style="margin-top:20px;"><button type="submit">确认登录</button><a href="' . $loginLink . '" class="btn">返回登录页</a></div>';
+            echo '</form>';
         }
 
-        $this->display('callbackdebug');
+        echo '</div></body></html>';
     }
 
     /**
