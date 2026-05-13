@@ -40,8 +40,8 @@ class dingtalklogin extends control
     }
 
     /**
-     * 钉钉扫码登录回调。
-     * DingTalk scan login callback.
+     * 钉钉扫码登录回调（调试模式）。
+     * DingTalk scan login callback with debug info.
      *
      * @access public
      * @return void
@@ -51,41 +51,88 @@ class dingtalklogin extends control
         $code  = $this->get->code;
         $state = $this->get->state;
 
-        /* 文件级调试日志，不受框架日志配置影响 */
-        $logFile = $this->app->logRoot . 'dingtalk_debug.log';
-        $logMsg  = date('Y-m-d H:i:s') . ' callback reached, code=' . (empty($code) ? 'EMPTY' : substr($code, 0, 20)) . ', state=' . (empty($state) ? 'EMPTY' : $state) . ', sessionState=' . ($this->session->dingtalkState ?? 'NULL') . PHP_EOL;
-        file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
+        $this->view->title        = '钉钉登录回调调试';
+        $this->view->code         = $code;
+        $this->view->state        = $state;
+        $this->view->sessionState = $this->session->dingtalkState ?? 'NULL';
+        $this->view->error        = '';
+        $this->view->userid       = '';
+        $this->view->users        = array();
 
         if(empty($code) || empty($state))
         {
-            $this->session->set('dingtalkError', '缺少授权参数 code 或 state');
-            return $this->locate($this->createLink('user', 'login'));
-        }
-
-        $result = $this->dingtalkloginZen->handleCallback($code, $state);
-
-        if($result['result'] === 'fail')
-        {
-            $this->session->set('dingtalkError', $result['message']);
-            return $this->locate($this->createLink('user', 'login'));
-        }
-
-        if($result['result'] === 'multi')
-        {
-            $this->view->users = $result['users'];
-            $this->display('choose');
+            $this->view->error = '缺少授权参数 code 或 state';
+            $this->display('callbackDebug');
             return;
         }
 
-        /* 单账号：使用 HTML 跳转替代 locate()，确保 session 完全写入后再跳转 */
-        $locateUrl   = $result['locate'];
-        $userAccount = (isset($_SESSION['user']) && is_object($_SESSION['user']) && !empty($_SESSION['user']->account)) ? $_SESSION['user']->account : 'NOT_SET';
-        echo "<!DOCTYPE html><html><head><meta charset='utf-8'><meta http-equiv='refresh' content='1;url={$locateUrl}'></head><body><p>登录成功，用户：{$userAccount}</p><p>正在跳转...</p><p><a href='{$locateUrl}'>如未自动跳转请点击这里</a></p></body></html>";
-        exit;
+        if($state !== $this->session->dingtalkState)
+        {
+            $this->view->error = 'state 校验失败：session 中的 state=' . ($this->session->dingtalkState ?? 'NULL') . '，传入的 state=' . $state;
+            $this->display('callbackDebug');
+            return;
+        }
+
+        $userid = $this->dingtalklogin->getUseridByCode('scan', $code);
+        $this->view->userid = $userid === false ? '获取失败' : $userid;
+
+        if($userid === false)
+        {
+            $this->view->error = '无法获取钉钉用户信息，请检查 appKey/appSecret 配置';
+            $this->display('callbackDebug');
+            return;
+        }
+
+        $users = $this->dingtalklogin->getBoundUsers($userid);
+        $this->view->users = $users;
+
+        if(empty($users))
+        {
+            $this->view->error = '未找到绑定的用户，请先在禅道后台 webhook 中绑定用户';
+            $this->display('callbackDebug');
+            return;
+        }
+
+        $this->display('callbackDebug');
     }
 
     /**
-     * 多账号选择登录。
+     * 确认登录（用户选择账号后提交）。
+     * Confirm login after user selection.
+     *
+     * @access public
+     * @return void
+     */
+    public function confirm()
+    {
+        $account = $this->post->account;
+        if(empty($account))
+        {
+            $this->session->set('dingtalkError', '未选择登录账号');
+            return $this->locate($this->createLink('user', 'login'));
+        }
+
+        $user = $this->loadModel('user')->getById($account, 'account');
+        if(empty($user) || $user->deleted)
+        {
+            $this->session->set('dingtalkError', '账号不存在或已禁用');
+            return $this->locate($this->createLink('user', 'login'));
+        }
+
+        $result = $this->loadModel('user')->login($user);
+        if($result === false)
+        {
+            $this->session->set('dingtalkError', '登录失败，请检查禅道用户状态');
+            return $this->locate($this->createLink('user', 'login'));
+        }
+
+        $this->loadModel('action')->create('user', (int)$user->id, 'login');
+        session_write_close();
+        return $this->locate($this->createLink('my', 'index'));
+    }
+
+    /**
+     * 多账号选择登录（兼容旧入口）。
      * Choose account when multiple Zentao users are bound to one DingTalk user.
      *
      * @access public
