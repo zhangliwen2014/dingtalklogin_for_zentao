@@ -13,6 +13,23 @@ declare(strict_types=1);
 class dingtalklogin extends control
 {
     /**
+     * 重写权限检查，钉钉登录相关方法直接放行。
+     * Override privilege check to allow guest access.
+     */
+    public function checkPriv()
+    {
+        $module = $this->app->getModuleName();
+        $method = $this->app->getMethodName();
+        $openMethods = array('scan', 'callback', 'confirm', 'choose', 'sso');
+        if($module === 'dingtalklogin' && in_array($method, $openMethods))
+        {
+            return true;
+        }
+        return parent::checkPriv();
+    }
+
+
+    /**
      * 扫码登录跳转页。
      * Scan login landing page.
      *
