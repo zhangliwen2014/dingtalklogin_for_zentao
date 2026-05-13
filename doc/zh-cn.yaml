@@ -6,8 +6,5 @@ version: 1.0.1
 author: Liwen.Zhang
 email: dev@example.com
 site: https://www.zentao.net
-zentao:
-  compatible: 20.6
-  depends: ~
-date: 2026-05-11
 license: "Copyright (C) 2026 by Liwen.Zhang"
+zentaoversion: 20.6
